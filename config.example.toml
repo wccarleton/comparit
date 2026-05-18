@@ -1,0 +1,30 @@
+[app]
+name = "comparit"
+debug = true
+base_url = "http://127.0.0.1:8000"
+
+[database]
+path = "data/comparit.sqlite3"
+
+[experiment]
+project_title = "Demo Cat Image Comparison"
+project_context = "This short demo asks you to compare simple cat images so the comparit workflow can be tested locally."
+institution_name = "Example Research Group"
+institution_branding = "Open visual comparison study"
+consent_text = "I understand that this demo records my image choices and response times. I understand that I can stop participating by closing the browser tab."
+completion_text = "Thank you for completing this demo comparison task. Your responses have been recorded."
+token_expired_text = "This experiment link has expired. Please contact the study organizer if you believe this is an error."
+instructions = "Select the cat image that feels more relaxed."
+allow_skip = true
+allow_tie = false
+token_required = true
+comparisons_per_session = 20
+token_validity_days = 28
+in_progress_expiry_minutes = 1440
+
+[images]
+image_root = "data/demo_images/cats"
+allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".svg"]
+
+[exports]
+output_dir = "exports"

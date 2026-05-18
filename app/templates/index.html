@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section
+  class="intro"
+  data-token="{{ token }}"
+  data-access-granted="{{ 'true' if access_granted else 'false' }}"
+  data-consent-required="{{ 'true' if consent_required else 'false' }}"
+  data-completion-text="{{ completion_text }}"
+  data-token-expired-text="{{ token_expired_text }}"
+>
+  <div class="intro-copy">
+    <p class="eyebrow">{{ institution_name }}</p>
+    <h1>{{ project_title }}</h1>
+    <p>
+      {{ project_context }}
+    </p>
+  </div>
+
+  <dl class="status-panel">
+    <div>
+      <dt>Pair selector</dt>
+      <dd id="selector-name">random</dd>
+    </div>
+    <div>
+      <dt>Target</dt>
+      <dd>{{ comparisons_per_session }} comparisons</dd>
+    </div>
+  </dl>
+</section>
+
+<section class="finish-panel" id="finish-panel" aria-live="polite" hidden>
+  <p class="eyebrow">{{ institution_branding }}</p>
+  <h2 id="finish-title">Task complete</h2>
+  <p id="finish-message">{{ completion_text }}</p>
+</section>
+
+{% if access_granted %}
+<section class="splash-panel" id="splash-panel" {% if not consent_required %}hidden{% endif %}>
+  <p class="eyebrow">{{ institution_branding }}</p>
+  <h2>Before you begin</h2>
+  <p>{{ consent_text }}</p>
+  <label class="consent-check">
+    <input id="consent-checkbox" type="checkbox">
+    <span>I accept these conditions and want to continue.</span>
+  </label>
+  <button class="primary-button" id="accept-consent-button" type="button" disabled>
+    Start comparisons
+  </button>
+</section>
+
+<section class="comparison" id="comparison-panel" aria-live="polite" {% if consent_required %}hidden{% endif %}>
+  <div class="instruction-strip">
+    {{ instructions }}
+  </div>
+  <div class="comparison-toolbar">
+    <p id="comparison-status">Loading image pair...</p>
+    <div class="comparison-actions">
+      {% if allow_tie %}
+      <button class="secondary-button" id="tie-pair-button" type="button">Tie</button>
+      {% endif %}
+      {% if allow_skip %}
+      <button class="secondary-button" id="skip-pair-button" type="button">Skip</button>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="pair-grid" id="pair-grid">
+    <button class="image-choice" type="button" data-side="left" disabled>
+      <span class="choice-label">Left image</span>
+      <img id="left-image" alt="">
+    </button>
+
+    <button class="image-choice" type="button" data-side="right" disabled>
+      <span class="choice-label">Right image</span>
+      <img id="right-image" alt="">
+    </button>
+  </div>
+</section>
+{% else %}
+<section class="finish-panel" aria-live="polite">
+  <p class="eyebrow">{{ institution_branding }}</p>
+  <h2>{{ token_message_title | default("Experiment unavailable") }}</h2>
+  <p>{{ token_message }}</p>
+</section>
+{% endif %}
+{% endblock %}

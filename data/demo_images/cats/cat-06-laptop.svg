@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Demo cat with a laptop</title>
+  <desc id="desc">A simple illustrated cat sitting behind a laptop.</desc>
+  <rect width="640" height="420" fill="#eef0f3"/>
+  <rect x="70" y="302" width="500" height="46" rx="6" fill="#bac3c9"/>
+  <rect x="242" y="188" width="218" height="132" rx="8" fill="#3e4d59"/>
+  <rect x="260" y="206" width="182" height="88" rx="4" fill="#d9eef4"/>
+  <ellipse cx="298" cy="273" rx="100" ry="68" fill="#67615d"/>
+  <circle cx="286" cy="198" r="62" fill="#776f69"/>
+  <path d="M241 164l24-56 28 56zM312 165l35-55 18 65z" fill="#776f69"/>
+  <circle cx="265" cy="193" r="8" fill="#f8e7a1"/>
+  <circle cx="306" cy="193" r="8" fill="#f8e7a1"/>
+  <path d="M279 214h16l-8 9z" fill="#c48982"/>
+  <path d="M197 270c-58-47-13-91 36-37" fill="none" stroke="#67615d" stroke-width="22" stroke-linecap="round"/>
+</svg>

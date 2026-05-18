@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" role="img" aria-labelledby="title desc">
+  <title id="title">Demo cat near a plant</title>
+  <desc id="desc">A simple illustrated cat beside a potted plant.</desc>
+  <rect width="640" height="420" fill="#f3efe6"/>
+  <rect x="464" y="244" width="82" height="94" rx="8" fill="#b7654f"/>
+  <path d="M505 246c-60-58-30-125 0-62 37-78 73-28 22 34 80-33 79 38 0 34z" fill="#4f8a5f"/>
+  <ellipse cx="300" cy="286" rx="118" ry="72" fill="#f1f1ef"/>
+  <circle cx="260" cy="214" r="66" fill="#ffffff"/>
+  <path d="M213 177l22-58 34 56zM292 175l36-54 18 66z" fill="#ffffff"/>
+  <path d="M225 242c34 20 70 20 108 0" fill="none" stroke="#d0d0ca" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="239" cy="207" r="8" fill="#2a363b"/>
+  <circle cx="284" cy="207" r="8" fill="#2a363b"/>
+  <path d="M254 227h18l-9 10z" fill="#d38c8c"/>
+  <path d="M392 282c68-48 93 17 35 54" fill="none" stroke="#f1f1ef" stroke-width="24" stroke-linecap="round"/>
+</svg>
