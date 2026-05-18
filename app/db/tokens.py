@@ -189,3 +189,57 @@ def is_expired(token: ParticipantToken) -> bool:
         return False
     expires_at = datetime.fromisoformat(token.expires_at)
     return expires_at <= utc_now()
+
+
+def list_token_summaries(database_path: Path | None = None) -> list[dict[str, object]]:
+    """Return participant tokens with response counts for operations/export."""
+    with connect(database_path) as connection:
+        initialize_schema(connection)
+        rows = connection.execute(
+            """
+            SELECT
+                participant_tokens.id,
+                participant_tokens.token,
+                participant_tokens.status,
+                participant_tokens.created_at,
+                participant_tokens.started_at,
+                participant_tokens.completed_at,
+                participant_tokens.expires_at,
+                participant_tokens.consent_accepted_at,
+                COUNT(comparison_responses.id) AS response_count
+            FROM participant_tokens
+            LEFT JOIN comparison_responses
+                ON comparison_responses.participant_token_id = participant_tokens.id
+            GROUP BY participant_tokens.id
+            ORDER BY participant_tokens.id
+            """
+        ).fetchall()
+
+    summaries = [dict(row) for row in rows]
+    for summary in summaries:
+        token = ParticipantToken(
+            id=int(summary["id"]),
+            token=str(summary["token"]),
+            status=summary["status"],  # type: ignore[arg-type]
+            created_at=str(summary["created_at"]),
+            started_at=summary["started_at"],  # type: ignore[arg-type]
+            completed_at=summary["completed_at"],  # type: ignore[arg-type]
+            expires_at=summary["expires_at"],  # type: ignore[arg-type]
+            consent_accepted_at=summary["consent_accepted_at"],  # type: ignore[arg-type]
+        )
+        summary["is_expired"] = is_expired(token)
+        summary["effective_status"] = "expired" if summary["is_expired"] else token.status
+    return summaries
+
+
+def reset_study_data(database_path: Path | None = None) -> None:
+    """Delete participant tokens, sessions, and responses.
+
+    Image files and local configuration are intentionally left untouched.
+    """
+    with connect(database_path) as connection:
+        initialize_schema(connection)
+        connection.execute("DELETE FROM comparison_responses")
+        connection.execute("DELETE FROM comparison_sessions")
+        connection.execute("DELETE FROM participant_tokens")
+        connection.commit()

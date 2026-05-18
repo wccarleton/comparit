@@ -93,7 +93,8 @@ uvicorn app.main:app --host 127.0.0.1 --port 8000
 
 For an actual public deployment, run this behind a reverse proxy such as nginx,
 Apache, or Caddy, and expose the public site over HTTPS. Do not use
-`--reload` in production.
+`--reload` in production. See [docs/deployment.md](docs/deployment.md) for a
+systemd example and reverse proxy notes.
 
 ## 4. Generate Participant Links
 
@@ -127,20 +128,21 @@ Token behavior:
 
 ## 5. Export Data
 
-Export captured responses with:
+Export captured responses and token metadata with:
 
 ```bash
 conda activate comparit
 python scripts/export_results.py
 ```
 
-The CSV is written to:
+The CSV files are written to:
 
 ```text
 exports/comparison_responses.csv
+exports/participant_tokens.csv
 ```
 
-The export includes response rows with:
+`comparison_responses.csv` includes response rows with:
 
 - participant token id
 - browser session id
@@ -152,7 +154,47 @@ The export includes response rows with:
 - response time in milliseconds
 - timestamp
 
-## 6. Configuration Reference
+`participant_tokens.csv` includes token status, effective status, consent
+timestamp, expiry timestamp, completion timestamp, and response count.
+
+## 6. Inspect Tokens
+
+List participant links and their operational status with:
+
+```bash
+conda activate comparit
+python scripts/list_tokens.py
+```
+
+The output shows token id, effective status, response count, consent state,
+creation time, expiry time, and token string.
+
+## 7. Run Preflight Checks
+
+Before generating real links, run:
+
+```bash
+conda activate comparit
+python scripts/preflight.py
+```
+
+This checks that configuration loads, the database initializes, the image root
+exists, at least two images are available, token settings are positive, and the
+export directory is writable.
+
+## 8. Reset Local Study Data
+
+To clear participant tokens, sessions, and responses before a real launch:
+
+```bash
+conda activate comparit
+python scripts/reset_study_data.py --yes
+```
+
+This does not delete image files or `config.toml`. The `--yes` flag is required
+on purpose.
+
+## 9. Configuration Reference
 
 The main study settings live in [config.toml](config.toml):
 
@@ -189,7 +231,7 @@ allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".svg"]
 output_dir = "exports"
 ```
 
-## 7. Useful Checks
+## 10. Useful Checks
 
 Run tests and linting:
 
@@ -218,7 +260,7 @@ python -m sqlite3 data/comparit.sqlite3 \
   "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;"
 ```
 
-## 8. Project Layout
+## 11. Project Layout
 
 ```text
 app/
@@ -235,7 +277,7 @@ docs/            Project notes.
 tests/           Automated tests.
 ```
 
-## 9. Notes
+## 12. Notes
 
 The bundled cat images are simple SVG fixtures for local testing. Replace
 `images.image_root` with your real study image directory before launch.

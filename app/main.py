@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from app.core.cache import NoCacheMiddleware
 from app.core.config import get_settings
 from app.routes import experiment, home
 
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
         debug=settings.debug,
         description="Pairwise image comparison experiment scaffold.",
     )
+    app.add_middleware(NoCacheMiddleware)
 
     app.mount(
         "/static",
