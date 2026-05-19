@@ -5,6 +5,8 @@ experiments. It is designed for small scientific or academic studies where
 participants receive unique links, accept consent text, compare image pairs,
 and then finish the task.
 
+![comparit comparison interface](docs/screenshots/comparison_ui.png)
+
 The app currently supports:
 
 - Configurable project/branding/consent text in `config.toml`
