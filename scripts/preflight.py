@@ -42,6 +42,14 @@ def main() -> int:
     image_paths = discover_images(settings.resolved_image_root, settings.allowed_extensions)
     check(len(image_paths) >= 2, f"at least two images found ({len(image_paths)})", errors)
 
+    if settings.institution_logo:
+        logo_path = settings.resolved_institution_logo_path
+        check(
+            logo_path is not None and logo_path.is_file(),
+            "configured institution logo exists",
+            errors,
+        )
+
     check(settings.comparisons_per_session > 0, "comparisons_per_session is positive", errors)
     check(settings.token_validity_days > 0, "token_validity_days is positive", errors)
     check(

@@ -8,6 +8,7 @@ and then finish the task.
 The app currently supports:
 
 - Configurable project/branding/consent text in `config.toml`
+- Optional institutional logo served from a separate assets directory
 - Tokenized participant links
 - Token expiry and completion states
 - Random image-pair selection
@@ -217,6 +218,13 @@ base_url = "http://127.0.0.1:8000"
 [database]
 path = "data/comparit.sqlite3"
 
+[assets]
+asset_root = "data/assets"
+# Put logos and other non-stimulus assets under asset_root, not under image_root.
+# Example: data/assets/logos/institution-logo.svg
+institution_logo = ""
+institution_logo_alt = ""
+
 [experiment]
 project_title = "Demo Cat Image Comparison"
 project_context = "This short demo asks you to compare simple cat images so the comparit workflow can be tested locally."
@@ -241,6 +249,20 @@ allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".svg"]
 
 [exports]
 output_dir = "exports"
+```
+
+To show an institutional logo, place the file under `data/assets`, then set
+`institution_logo` to the path relative to `asset_root`:
+
+```text
+data/assets/logos/mpg-logo.svg
+```
+
+```toml
+[assets]
+asset_root = "data/assets"
+institution_logo = "logos/mpg-logo.svg"
+institution_logo_alt = "Max Planck Society logo"
 ```
 
 ## 10. Useful Checks

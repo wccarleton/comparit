@@ -20,7 +20,7 @@ class NoCacheMiddleware(BaseHTTPMiddleware):
 
 def should_prevent_cache(path: str) -> bool:
     """Return whether a response path should receive no-cache headers."""
-    return not path.startswith("/static/")
+    return not path.startswith(("/static/", "/assets/"))
 
 
 def add_no_cache_headers(response: Response) -> None:

@@ -33,6 +33,11 @@ def create_app() -> FastAPI:
         StaticFiles(directory=BASE_DIR / "static"),
         name="static",
     )
+    app.mount(
+        "/assets",
+        StaticFiles(directory=settings.resolved_asset_root, check_dir=False),
+        name="assets",
+    )
     app.include_router(experiment.router)
     app.include_router(home.router)
 

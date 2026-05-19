@@ -6,6 +6,13 @@ base_url = "http://127.0.0.1:8000"
 [database]
 path = "data/comparit.sqlite3"
 
+[assets]
+asset_root = "data/assets"
+# Put logos and other non-stimulus assets under asset_root, not under image_root.
+# Example: data/assets/logos/institution-logo.svg
+institution_logo = ""
+institution_logo_alt = ""
+
 [experiment]
 project_title = "Demo Cat Image Comparison"
 project_context = "This short demo asks you to compare simple cat images so the comparit workflow can be tested locally."

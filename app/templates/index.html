@@ -11,7 +11,16 @@
   data-session-mismatch-text="{{ session_mismatch_text }}"
 >
   <div class="intro-copy">
-    <p class="eyebrow">{{ institution_name }}</p>
+    <div class="institution-line">
+      {% if institution_logo_url %}
+      <img
+        class="institution-logo"
+        src="{{ institution_logo_url }}"
+        alt="{{ institution_logo_alt }}"
+      >
+      {% endif %}
+      <p class="eyebrow">{{ institution_name }}</p>
+    </div>
     <h1>{{ project_title }}</h1>
     <p>
       {{ project_context }}
@@ -53,6 +62,17 @@
 <section class="comparison" id="comparison-panel" aria-live="polite" {% if consent_required %}hidden{% endif %}>
   <div class="instruction-strip">
     {{ instructions }}
+  </div>
+  <div class="progress-panel" aria-label="Comparison progress">
+    <div class="progress-copy">
+      <span id="progress-label">0 of {{ comparisons_per_session }} complete</span>
+      <span id="progress-percent">0%</span>
+    </div>
+    <progress
+      id="comparison-progress"
+      value="0"
+      max="{{ comparisons_per_session }}"
+    ></progress>
   </div>
   <div class="comparison-toolbar">
     <p id="comparison-status">Loading image pair...</p>

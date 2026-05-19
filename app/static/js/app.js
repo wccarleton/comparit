@@ -20,6 +20,9 @@ const consentCheckbox = document.querySelector("#consent-checkbox");
 const acceptConsentButton = document.querySelector("#accept-consent-button");
 const statusElement = document.querySelector("#comparison-status");
 const selectorElement = document.querySelector("#selector-name");
+const progressElement = document.querySelector("#comparison-progress");
+const progressLabelElement = document.querySelector("#progress-label");
+const progressPercentElement = document.querySelector("#progress-percent");
 const skipButton = document.querySelector("#skip-pair-button");
 const tieButton = document.querySelector("#tie-pair-button");
 const choiceButtons = Array.from(document.querySelectorAll(".image-choice"));
@@ -46,6 +49,23 @@ function setChoicesEnabled(enabled) {
   choiceButtons.forEach((button) => {
     button.disabled = !enabled;
   });
+}
+
+function updateProgress(completedCount, comparisonsPerSession) {
+  const target = Math.max(Number(comparisonsPerSession) || 0, 0);
+  const completed = Math.min(Math.max(Number(completedCount) || 0, 0), target);
+  const percent = target > 0 ? Math.round((completed / target) * 100) : 0;
+
+  if (progressElement) {
+    progressElement.max = target;
+    progressElement.value = completed;
+  }
+  if (progressLabelElement) {
+    progressLabelElement.textContent = `${completed} of ${target} complete`;
+  }
+  if (progressPercentElement) {
+    progressPercentElement.textContent = `${percent}%`;
+  }
 }
 
 function showComparisonPanel() {
@@ -84,6 +104,7 @@ function imageForSide(pair, side) {
 
 function renderPair(pair) {
   if (pair.completed) {
+    updateProgress(pair.completed_count, pair.comparisons_per_session);
     renderCompletion();
     return;
   }
@@ -104,6 +125,7 @@ function renderPair(pair) {
   if (selectorElement) {
     selectorElement.textContent = pair.strategy;
   }
+  updateProgress(pair.completed_count, pair.comparisons_per_session);
 
   state.pairLoadedAt = performance.now();
   setChoicesEnabled(true);
@@ -227,6 +249,7 @@ async function submitResponse(action, side = null) {
 
     const result = await response.json();
     state.loading = false;
+    updateProgress(result.completed_count, result.comparisons_per_session);
     if (result.completed) {
       renderCompletion();
       return;

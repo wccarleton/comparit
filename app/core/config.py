@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     )
     institution_name: str = "Your Institution"
     institution_branding: str = "Research demo"
+    institution_logo: str = ""
+    institution_logo_alt: str = ""
     consent_text: str = (
         "I understand that my responses and response times will be recorded for this "
         "study. I understand that I can stop participating by closing the browser tab."
@@ -55,6 +57,7 @@ class Settings(BaseSettings):
     token_validity_days: int = 28
     in_progress_expiry_minutes: int = 1440
     database_path: Path = Field(default=Path("data/comparit.sqlite3"))
+    asset_root: Path = Field(default=Path("data/assets"))
     image_root: Path = Field(default=Path("data/demo_images/cats"))
     allowed_extensions: tuple[str, ...] = (".jpg", ".jpeg", ".png", ".webp", ".svg")
     export_output_dir: Path = Field(default=Path("exports"))
@@ -71,6 +74,18 @@ class Settings(BaseSettings):
     def resolved_database_path(self) -> Path:
         """Absolute SQLite database path."""
         return self.resolve_path(self.database_path)
+
+    @property
+    def resolved_asset_root(self) -> Path:
+        """Absolute path for non-stimulus study assets such as logos."""
+        return self.resolve_path(self.asset_root)
+
+    @property
+    def resolved_institution_logo_path(self) -> Path | None:
+        """Absolute configured logo path, if one is set."""
+        if not self.institution_logo:
+            return None
+        return self.resolved_asset_root / self.institution_logo
 
     @property
     def resolved_image_root(self) -> Path:
@@ -115,6 +130,8 @@ def _read_toml_config(path: Path) -> dict[str, Any]:
             "institution_branding",
             "Research demo",
         ),
+        "institution_logo": raw.get("assets", {}).get("institution_logo", ""),
+        "institution_logo_alt": raw.get("assets", {}).get("institution_logo_alt", ""),
         "consent_text": raw.get("experiment", {}).get(
             "consent_text",
             "I understand that my responses and response times will be recorded for this "
@@ -151,6 +168,7 @@ def _read_toml_config(path: Path) -> dict[str, Any]:
             1440,
         ),
         "database_path": Path(raw.get("database", {}).get("path", "data/comparit.sqlite3")),
+        "asset_root": Path(raw.get("assets", {}).get("asset_root", "data/assets")),
         "image_root": Path(raw.get("images", {}).get("image_root", "data/demo_images/cats")),
         "allowed_extensions": tuple(
             raw.get("images", {}).get(

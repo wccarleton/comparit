@@ -1,5 +1,7 @@
 """Homepage routes."""
 
+from urllib.parse import quote
+
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -62,11 +64,20 @@ def _token_page_state(token_value: str | None) -> dict[str, str | bool]:
     }
 
 
+def _asset_url(relative_path: str) -> str:
+    """Build a browser URL for a configured non-stimulus asset."""
+    return f"/assets/{quote(relative_path, safe='/')}"
+
+
 @router.get("/", response_class=HTMLResponse)
 def index(request: Request, t: str | None = None) -> HTMLResponse:
     """Render the Phase 1 landing page."""
     settings = get_settings()
     token_state = _token_page_state(t)
+    institution_logo_url = (
+        _asset_url(settings.institution_logo) if settings.institution_logo else ""
+    )
+    institution_logo_alt = settings.institution_logo_alt or f"{settings.institution_name} logo"
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -77,6 +88,8 @@ def index(request: Request, t: str | None = None) -> HTMLResponse:
             "project_context": settings.project_context,
             "institution_name": settings.institution_name,
             "institution_branding": settings.institution_branding,
+            "institution_logo_url": institution_logo_url,
+            "institution_logo_alt": institution_logo_alt,
             "consent_text": settings.consent_text,
             "completion_text": settings.completion_text,
             "token_expired_text": settings.token_expired_text,

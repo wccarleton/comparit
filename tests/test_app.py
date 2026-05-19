@@ -29,3 +29,4 @@ def test_static_paths_are_excluded_from_no_cache_middleware() -> None:
     assert should_prevent_cache("/health")
     assert should_prevent_cache("/api/pair")
     assert not should_prevent_cache("/static/css/site.css")
+    assert not should_prevent_cache("/assets/logos/institution-logo.svg")
