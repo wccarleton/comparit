@@ -1,6 +1,12 @@
 """Tests for comparison response persistence."""
 
-from app.db.responses import ComparisonResponse, list_responses, record_response
+from app.db.responses import (
+    ComparisonResponse,
+    list_pair_keys_for_token,
+    list_responses,
+    record_response,
+)
+from app.db.tokens import create_tokens
 
 
 def test_record_response_persists_choice(tmp_path) -> None:
@@ -52,3 +58,27 @@ def test_record_response_persists_skip_without_selected_image(tmp_path) -> None:
 
     assert rows[0]["selected_image_id"] is None
     assert rows[0]["action"] == "skip"
+
+
+def test_list_pair_keys_for_token_returns_order_independent_keys(tmp_path) -> None:
+    """Seen pairs should be normalized regardless of displayed side."""
+    database_path = tmp_path / "comparit.sqlite3"
+    token = create_tokens(["token-1"], validity_days=28, database_path=database_path)[0]
+
+    record_response(
+        ComparisonResponse(
+            participant_token_id=token.id,
+            browser_session_id="browser-session-1",
+            left_image_id="cat-02-books.svg",
+            right_image_id="cat-01-window.svg",
+            selected_image_id="cat-01-window.svg",
+            action="select",
+            pair_selection_strategy="shuffle",
+            response_time_ms=789,
+        ),
+        database_path=database_path,
+    )
+
+    assert list_pair_keys_for_token(token.id, database_path=database_path) == {
+        ("cat-01-window.svg", "cat-02-books.svg")
+    }

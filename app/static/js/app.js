@@ -8,6 +8,7 @@ const state = {
   consentRequired: document.querySelector(".intro")?.dataset.consentRequired === "true",
   completionText: document.querySelector(".intro")?.dataset.completionText || "",
   tokenExpiredText: document.querySelector(".intro")?.dataset.tokenExpiredText || "",
+  sessionMismatchText: document.querySelector(".intro")?.dataset.sessionMismatchText || "",
 };
 
 const splashPanel = document.querySelector("#splash-panel");
@@ -121,6 +122,12 @@ function renderExpiry() {
   showFinishPanel("Link expired", state.tokenExpiredText);
 }
 
+function renderSessionMismatch() {
+  setChoicesEnabled(false);
+  state.pair = null;
+  showFinishPanel("Session unavailable", state.sessionMismatchText);
+}
+
 async function loadNextPair() {
   if (state.loading) {
     return;
@@ -131,13 +138,22 @@ async function loadNextPair() {
   setStatus("Loading image pair...");
 
   try {
-    const query = state.token ? `?token=${encodeURIComponent(state.token)}` : "";
+    const query = state.token
+      ? `?token=${encodeURIComponent(state.token)}&browser_session_id=${encodeURIComponent(state.browserSessionId)}`
+      : "";
     const response = await fetch(`/api/pair${query}`);
     if (!response.ok) {
       if (response.status === 403) {
         const errorResult = await response.json();
         if (errorResult.detail === "Participant token has expired.") {
           renderExpiry();
+          return;
+        }
+      }
+      if (response.status === 409) {
+        const errorResult = await response.json();
+        if (errorResult.detail === "Participant browser session does not match token.") {
+          renderSessionMismatch();
           return;
         }
       }
@@ -198,6 +214,14 @@ async function submitResponse(action, side = null) {
           return;
         }
       }
+      if (response.status === 409) {
+        const errorResult = await response.json();
+        if (errorResult.detail === "Participant browser session does not match token.") {
+          state.loading = false;
+          renderSessionMismatch();
+          return;
+        }
+      }
       throw new Error(`Could not save response: ${response.status}`);
     }
 
@@ -249,10 +273,18 @@ if (consentCheckbox && acceptConsentButton) {
         },
         body: JSON.stringify({
           token: state.token || null,
+          browser_session_id: state.browserSessionId,
         }),
       });
 
       if (!response.ok) {
+        if (response.status === 409) {
+          const errorResult = await response.json();
+          if (errorResult.detail === "Participant browser session does not match token.") {
+            renderSessionMismatch();
+            return;
+          }
+        }
         throw new Error(`Could not accept consent: ${response.status}`);
       }
 

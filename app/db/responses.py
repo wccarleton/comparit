@@ -96,3 +96,26 @@ def count_responses_for_token(token_id: int, database_path: Path | None = None) 
             (token_id,),
         ).fetchone()
     return int(row["response_count"])
+
+
+def pair_key(left_image_id: str, right_image_id: str) -> tuple[str, str]:
+    """Return an order-independent key for a displayed image pair."""
+    return tuple(sorted((left_image_id, right_image_id)))
+
+
+def list_pair_keys_for_token(
+    token_id: int,
+    database_path: Path | None = None,
+) -> set[tuple[str, str]]:
+    """Return order-independent pair keys already shown to one participant token."""
+    with connect(database_path) as connection:
+        initialize_schema(connection)
+        rows = connection.execute(
+            """
+            SELECT left_image_id, right_image_id
+            FROM comparison_responses
+            WHERE participant_token_id = ?
+            """,
+            (token_id,),
+        ).fetchall()
+    return {pair_key(row["left_image_id"], row["right_image_id"]) for row in rows}

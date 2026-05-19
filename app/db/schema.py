@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS participant_tokens (
     started_at TEXT,
     completed_at TEXT,
     expires_at TEXT,
-    consent_accepted_at TEXT
+    consent_accepted_at TEXT,
+    browser_session_id TEXT
 );
 
 CREATE TABLE IF NOT EXISTS comparison_sessions (
@@ -79,6 +80,7 @@ def _ensure_participant_token_schema(connection: sqlite3.Connection) -> None:
         "completed_at",
         "expires_at",
         "consent_accepted_at",
+        "browser_session_id",
     }
 
     if required_columns.issubset(columns):
@@ -87,6 +89,8 @@ def _ensure_participant_token_schema(connection: sqlite3.Connection) -> None:
     if "status" in columns:
         if "consent_accepted_at" not in columns:
             connection.execute("ALTER TABLE participant_tokens ADD COLUMN consent_accepted_at TEXT")
+        if "browser_session_id" not in columns:
+            connection.execute("ALTER TABLE participant_tokens ADD COLUMN browser_session_id TEXT")
         return
 
     connection.execute("ALTER TABLE participant_tokens RENAME TO participant_tokens_legacy")
@@ -102,7 +106,8 @@ def _ensure_participant_token_schema(connection: sqlite3.Connection) -> None:
             started_at TEXT,
             completed_at TEXT,
             expires_at TEXT,
-            consent_accepted_at TEXT
+            consent_accepted_at TEXT,
+            browser_session_id TEXT
         );
         """
     )

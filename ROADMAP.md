@@ -4,9 +4,16 @@ This roadmap tracks practical next steps before using `comparit` with real
 participants, plus likely follow-on work after a pilot.
 
 ## Gerneric App Dev Next Steps
-- [ ] Bind participant tokens to a client-side browser session id and preserve that session id in durable browser storage so a token cannot be reused from a different browser/session.
+- [x] Add a `shuffle` selection algorithm while keeping `random` available.
 
-- [ ] Add a landing or message page for when a token is presented with a mismatched or lost session id, explaining why the token cannot continue and what next steps the participant should take.
+- [x] Document a plug-and-play pair selector API so future algorithms can use
+      participant/session history, global database history, or image metadata.
+
+- [x] Add token revocation.
+
+- [x] Bind participant tokens to a client-side browser session id and preserve that session id in durable browser storage so a token cannot be reused from a different browser/session.
+
+- [x] Add a landing or message page for when a token is presented with a mismatched or lost session id, explaining why the token cannot continue and what next steps the participant should take.
 
 - [x] Token inspection script. You need to see which links are unused, in progress, completed, expired, or consented. This is operational, not study-specific.
 

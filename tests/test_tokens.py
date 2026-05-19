@@ -9,6 +9,7 @@ from app.db.tokens import (
     is_expired,
     list_token_summaries,
     reset_study_data,
+    revoke_token,
     start_token,
 )
 
@@ -77,10 +78,35 @@ def test_accept_consent_records_timestamp(tmp_path) -> None:
     database_path = tmp_path / "comparit.sqlite3"
     token = create_tokens(["token-1"], validity_days=28, database_path=database_path)[0]
 
-    accepted = accept_consent(token.id, database_path=database_path)
+    accepted = accept_consent(
+        token.id,
+        browser_session_id="browser-session-1",
+        database_path=database_path,
+    )
 
     assert accepted is not None
     assert accepted.consent_accepted_at is not None
+    assert accepted.browser_session_id == "browser-session-1"
+
+
+def test_accept_consent_does_not_rebind_existing_session(tmp_path) -> None:
+    """Consent acceptance should preserve the original browser binding."""
+    database_path = tmp_path / "comparit.sqlite3"
+    token = create_tokens(["token-1"], validity_days=28, database_path=database_path)[0]
+
+    accept_consent(
+        token.id,
+        browser_session_id="browser-session-1",
+        database_path=database_path,
+    )
+    rebound = accept_consent(
+        token.id,
+        browser_session_id="browser-session-2",
+        database_path=database_path,
+    )
+
+    assert rebound is not None
+    assert rebound.browser_session_id == "browser-session-1"
 
 
 def test_list_token_summaries_includes_response_count(tmp_path) -> None:
@@ -129,3 +155,30 @@ def test_reset_study_data_removes_tokens_and_responses(tmp_path) -> None:
 
     assert list_token_summaries(database_path=database_path) == []
     assert count_responses_for_token(token.id, database_path=database_path) == 0
+
+
+def test_revoke_token_marks_non_completed_token_revoked(tmp_path) -> None:
+    """Revocation should disable a token that has not completed."""
+    database_path = tmp_path / "comparit.sqlite3"
+    create_tokens(["token-1"], validity_days=28, database_path=database_path)
+
+    revoked = revoke_token("token-1", database_path=database_path)
+    token = get_token("token-1", database_path=database_path)
+
+    assert revoked
+    assert token is not None
+    assert token.status == "revoked"
+
+
+def test_revoke_token_does_not_revoke_completed_token(tmp_path) -> None:
+    """Completed tokens should remain completed for audit clarity."""
+    database_path = tmp_path / "comparit.sqlite3"
+    token = create_tokens(["token-1"], validity_days=28, database_path=database_path)[0]
+    complete_token(token.id, database_path=database_path)
+
+    revoked = revoke_token("token-1", database_path=database_path)
+    completed = get_token("token-1", database_path=database_path)
+
+    assert not revoked
+    assert completed is not None
+    assert completed.status == "completed"

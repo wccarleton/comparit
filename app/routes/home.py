@@ -80,6 +80,7 @@ def index(request: Request, t: str | None = None) -> HTMLResponse:
             "consent_text": settings.consent_text,
             "completion_text": settings.completion_text,
             "token_expired_text": settings.token_expired_text,
+            "session_mismatch_text": settings.session_mismatch_text,
             "allow_skip": settings.allow_skip,
             "allow_tie": settings.allow_tie,
             "token": t or "",

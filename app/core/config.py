@@ -43,8 +43,13 @@ class Settings(BaseSettings):
         "This experiment link has expired. Please contact the study organizer if you "
         "believe this is an error."
     )
+    session_mismatch_text: str = (
+        "This experiment link is already associated with another browser session. "
+        "Please return to the original browser, or contact the study organizer for a new link."
+    )
     allow_skip: bool = True
     allow_tie: bool = False
+    pair_selection_strategy: str = "random"
     token_required: bool = True
     comparisons_per_session: int = 20
     token_validity_days: int = 28
@@ -124,8 +129,17 @@ def _read_toml_config(path: Path) -> dict[str, Any]:
             "This experiment link has expired. Please contact the study organizer if you "
             "believe this is an error.",
         ),
+        "session_mismatch_text": raw.get("experiment", {}).get(
+            "session_mismatch_text",
+            "This experiment link is already associated with another browser session. "
+            "Please return to the original browser, or contact the study organizer for a new link.",
+        ),
         "allow_skip": raw.get("experiment", {}).get("allow_skip", True),
         "allow_tie": raw.get("experiment", {}).get("allow_tie", False),
+        "pair_selection_strategy": raw.get("experiment", {}).get(
+            "pair_selection_strategy",
+            "random",
+        ),
         "token_required": raw.get("experiment", {}).get("token_required", True),
         "comparisons_per_session": raw.get("experiment", {}).get(
             "comparisons_per_session",

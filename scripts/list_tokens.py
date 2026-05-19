@@ -18,6 +18,7 @@ def main() -> None:
         "effective_status",
         "responses",
         "consent",
+        "session",
         "created",
         "expires",
         "token",
@@ -25,11 +26,13 @@ def main() -> None:
     print("\t".join(headers))
     for row in rows:
         consent = "yes" if row["consent_accepted_at"] else "no"
+        session = "bound" if row["browser_session_id"] else "none"
         values = [
             str(row["id"]),
             str(row["effective_status"]),
             str(row["response_count"]),
             consent,
+            session,
             str(row["created_at"]),
             str(row["expires_at"] or ""),
             str(row["token"]),

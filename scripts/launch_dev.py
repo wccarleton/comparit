@@ -122,6 +122,15 @@ def browser_url(host: str, port: int, token: str | None) -> str:
     return f"{homepage_url}/?{urlencode({'t': token})}"
 
 
+def print_participant_url(url: str) -> None:
+    """Print the participant URL in a copy-friendly block."""
+    border = "=" * 72
+    print(border, flush=True)
+    print("Participant URL - copy this to reopen the same dev session:", flush=True)
+    print(url, flush=True)
+    print(border, flush=True)
+
+
 def main() -> int:
     """Run the development launcher."""
     args = parse_args()
@@ -131,12 +140,13 @@ def main() -> int:
     summarize_images()
     homepage_url = browser_url(args.host, args.port, args.token)
     health_url = f"http://{args.host}:{args.port}/health"
-    print(f"Participant URL: {homepage_url}", flush=True)
+    print_participant_url(homepage_url)
 
     process = launch_server(args.host, args.port, reload=not args.no_reload)
     try:
         if wait_for_health(health_url):
             print(f"Server is ready: {homepage_url}", flush=True)
+            print_participant_url(homepage_url)
             if not args.no_browser:
                 webbrowser.open(homepage_url)
                 print("Browser launch requested.", flush=True)

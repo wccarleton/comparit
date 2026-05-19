@@ -25,6 +25,7 @@ class ParticipantToken:
     completed_at: str | None
     expires_at: str | None
     consent_accepted_at: str | None
+    browser_session_id: str | None
 
 
 def utc_now() -> datetime:
@@ -66,7 +67,8 @@ def create_tokens(
                 started_at,
                 completed_at,
                 expires_at,
-                consent_accepted_at
+                consent_accepted_at,
+                browser_session_id
             FROM participant_tokens
             WHERE token IN ({placeholders})
             ORDER BY id
@@ -90,7 +92,8 @@ def get_token(token: str, database_path: Path | None = None) -> ParticipantToken
                 started_at,
                 completed_at,
                 expires_at,
-                consent_accepted_at
+                consent_accepted_at,
+                browser_session_id
             FROM participant_tokens
             WHERE token = ?
             """,
@@ -151,17 +154,39 @@ def complete_token(token_id: int, database_path: Path | None = None) -> None:
         connection.commit()
 
 
-def accept_consent(token_id: int, database_path: Path | None = None) -> ParticipantToken | None:
-    """Record consent acceptance for a token."""
+def revoke_token(token: str, database_path: Path | None = None) -> bool:
+    """Mark a participant token as revoked by token string."""
+    with connect(database_path) as connection:
+        initialize_schema(connection)
+        cursor = connection.execute(
+            """
+            UPDATE participant_tokens
+            SET status = 'revoked'
+            WHERE token = ?
+              AND status != 'completed'
+            """,
+            (token,),
+        )
+        connection.commit()
+        return cursor.rowcount > 0
+
+
+def accept_consent(
+    token_id: int,
+    browser_session_id: str,
+    database_path: Path | None = None,
+) -> ParticipantToken | None:
+    """Record consent acceptance and bind a token to a browser session."""
     with connect(database_path) as connection:
         initialize_schema(connection)
         connection.execute(
             """
             UPDATE participant_tokens
-            SET consent_accepted_at = COALESCE(consent_accepted_at, ?)
+            SET consent_accepted_at = COALESCE(consent_accepted_at, ?),
+                browser_session_id = COALESCE(browser_session_id, ?)
             WHERE id = ?
             """,
-            (to_sqlite_timestamp(utc_now()), token_id),
+            (to_sqlite_timestamp(utc_now()), browser_session_id, token_id),
         )
         connection.commit()
         row = connection.execute(
@@ -174,7 +199,8 @@ def accept_consent(token_id: int, database_path: Path | None = None) -> Particip
                 started_at,
                 completed_at,
                 expires_at,
-                consent_accepted_at
+                consent_accepted_at,
+                browser_session_id
             FROM participant_tokens
             WHERE id = ?
             """,
@@ -206,6 +232,7 @@ def list_token_summaries(database_path: Path | None = None) -> list[dict[str, ob
                 participant_tokens.completed_at,
                 participant_tokens.expires_at,
                 participant_tokens.consent_accepted_at,
+                participant_tokens.browser_session_id,
                 COUNT(comparison_responses.id) AS response_count
             FROM participant_tokens
             LEFT JOIN comparison_responses
@@ -226,6 +253,7 @@ def list_token_summaries(database_path: Path | None = None) -> list[dict[str, ob
             completed_at=summary["completed_at"],  # type: ignore[arg-type]
             expires_at=summary["expires_at"],  # type: ignore[arg-type]
             consent_accepted_at=summary["consent_accepted_at"],  # type: ignore[arg-type]
+            browser_session_id=summary["browser_session_id"],  # type: ignore[arg-type]
         )
         summary["is_expired"] = is_expired(token)
         summary["effective_status"] = "expired" if summary["is_expired"] else token.status

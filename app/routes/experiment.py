@@ -11,7 +11,12 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app.core.config import get_settings
-from app.db.responses import ComparisonResponse, count_responses_for_token, record_response
+from app.db.responses import (
+    ComparisonResponse,
+    count_responses_for_token,
+    list_pair_keys_for_token,
+    record_response,
+)
 from app.db.tokens import (
     ParticipantToken,
     accept_consent,
@@ -21,7 +26,7 @@ from app.db.tokens import (
     start_token,
 )
 from app.services.image_indexer import discover_images
-from app.services.pair_selection import build_candidates, get_pair_selector
+from app.services.pair_selection import SelectionContext, build_candidates, get_pair_selector
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -44,6 +49,7 @@ class ConsentSubmission(BaseModel):
     """Payload sent when a participant accepts consent."""
 
     token: str | None = None
+    browser_session_id: str = Field(min_length=1, max_length=128)
 
 
 def _image_url(image_id: str) -> str:
@@ -71,6 +77,7 @@ def _resolve_image_id(image_id: str) -> Path:
 
 def _require_active_token(
     token_value: str | None,
+    browser_session_id: str | None,
     require_consent: bool = True,
 ) -> ParticipantToken | None:
     """Validate or start a token depending on experiment configuration."""
@@ -97,6 +104,12 @@ def _require_active_token(
     if is_expired(token):
         raise HTTPException(status_code=403, detail="Participant token has expired.")
 
+    if token.browser_session_id is not None and token.browser_session_id != browser_session_id:
+        raise HTTPException(
+            status_code=409,
+            detail="Participant browser session does not match token.",
+        )
+
     if require_consent and token.consent_accepted_at is None:
         raise HTTPException(status_code=403, detail="Consent has not been accepted.")
 
@@ -106,11 +119,15 @@ def _require_active_token(
 @router.post("/api/consent")
 def submit_consent(consent: ConsentSubmission) -> dict[str, object]:
     """Record participant consent acceptance."""
-    participant_token = _require_active_token(consent.token, require_consent=False)
+    participant_token = _require_active_token(
+        consent.token,
+        browser_session_id=consent.browser_session_id,
+        require_consent=False,
+    )
     if participant_token is None:
         return {"status": "accepted"}
 
-    accepted_token = accept_consent(participant_token.id)
+    accepted_token = accept_consent(participant_token.id, consent.browser_session_id)
     return {
         "status": "accepted",
         "consent_accepted": accepted_token is not None
@@ -119,10 +136,10 @@ def submit_consent(consent: ConsentSubmission) -> dict[str, object]:
 
 
 @router.get("/api/pair")
-def next_pair(token: str | None = None) -> dict[str, object]:
+def next_pair(token: str | None = None, browser_session_id: str | None = None) -> dict[str, object]:
     """Return the next image pair for the browser UI."""
     settings = get_settings()
-    participant_token = _require_active_token(token)
+    participant_token = _require_active_token(token, browser_session_id=browser_session_id)
     completed_count = (
         count_responses_for_token(participant_token.id) if participant_token is not None else 0
     )
@@ -140,8 +157,19 @@ def next_pair(token: str | None = None) -> dict[str, object]:
     if len(candidates) < 2:
         raise HTTPException(status_code=409, detail="At least two images are required.")
 
-    selector = get_pair_selector()
-    pair = selector.select_pair(candidates)
+    seen_pair_keys = (
+        list_pair_keys_for_token(participant_token.id) if participant_token is not None else set()
+    )
+    selector = get_pair_selector(settings.pair_selection_strategy)
+    pair = selector.select_pair(
+        SelectionContext(
+            candidates=candidates,
+            participant_token_id=participant_token.id if participant_token is not None else None,
+            completed_count=completed_count,
+            seen_pair_keys=seen_pair_keys,
+            database_path=settings.resolved_database_path,
+        )
+    )
 
     return {
         "strategy": pair.strategy,
@@ -167,7 +195,10 @@ def next_pair(token: str | None = None) -> dict[str, object]:
 def submit_choice(choice: ChoiceSubmission) -> dict[str, object]:
     """Persist a browser-submitted comparison response."""
     settings = get_settings()
-    participant_token = _require_active_token(choice.token)
+    participant_token = _require_active_token(
+        choice.token,
+        browser_session_id=choice.browser_session_id,
+    )
 
     if choice.action == "select" and choice.selected_image_id not in {
         choice.left_image_id,

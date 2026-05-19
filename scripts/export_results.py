@@ -47,6 +47,7 @@ def main() -> None:
         "completed_at",
         "expires_at",
         "consent_accepted_at",
+        "browser_session_id",
         "response_count",
     ]
     with tokens_output_path.open("w", newline="", encoding="utf-8") as csv_file:

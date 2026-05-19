@@ -121,10 +121,20 @@ Token behavior:
 - New tokens start as `unused`.
 - Opening a link moves the token to `in_progress`.
 - Participants must accept the consent screen before image pairs load.
+- Consent acceptance binds the token to that browser session.
 - When `comparisons_per_session` responses are recorded, the token becomes
   `completed`.
 - Completed tokens cannot be reused.
+- Tokens opened later from another browser/session show the configured session
+  mismatch message.
 - Expired tokens show the configured expiry message.
+- Tokens can be revoked manually if a link should no longer be usable.
+
+Revoke a token with:
+
+```bash
+python scripts/revoke_token.py TOKEN_STRING
+```
 
 ## 5. Export Data
 
@@ -215,9 +225,11 @@ institution_branding = "Open visual comparison study"
 consent_text = "I understand that this demo records my image choices and response times. I understand that I can stop participating by closing the browser tab."
 completion_text = "Thank you for completing this demo comparison task. Your responses have been recorded."
 token_expired_text = "This experiment link has expired. Please contact the study organizer if you believe this is an error."
+session_mismatch_text = "This experiment link is already associated with another browser session. Please return to the original browser, or contact the study organizer for a new link."
 instructions = "Select the cat image that feels more relaxed."
 allow_skip = true
 allow_tie = false
+pair_selection_strategy = "random"
 token_required = true
 comparisons_per_session = 20
 token_validity_days = 28
@@ -288,6 +300,9 @@ normal local disk.
 
 See [ROADMAP.md](ROADMAP.md) for remaining launch-critical work and future
 features.
+
+See [docs/pair_selectors.md](docs/pair_selectors.md) for the pair selector API
+and built-in `random`/`shuffle` strategies.
 
 ## License
 
